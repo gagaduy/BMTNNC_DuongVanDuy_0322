@@ -2,10 +2,13 @@ from flask import Flask, request, jsonify
 from cipher.caesar import CaesarCipher
 from cipher.vigenere import VigenereCipher
 from cipher.railfence import RailfenceCipher
+from cipher.playfair import PlayfairCipher
+
 app = Flask(__name__)
 cipher = CaesarCipher()
 vigenere_cipher = VigenereCipher()
 railfence_cipher = RailfenceCipher()
+playfair_cipher = PlayfairCipher()
 
 @app.route('/api/caesar/encrypt', methods=['POST'])
 def encrypt():
@@ -65,6 +68,37 @@ def railfence_decrypt():
     if ciphertext is None or num_rails is None:
         return jsonify({'error': 'Missing ciphertext or num_rails'}), 400
     plaintext = railfence_cipher.decrypt(ciphertext, num_rails)
+    return jsonify({'plaintext': plaintext})
+
+@app.route('/api/playfair/create_matrix', methods=['POST'])
+def playfair_create_matrix():
+    data = request.get_json()
+    key = data.get('key')
+    if key is None:
+        return jsonify({'error': 'Missing key'}), 400
+    matrix = playfair_cipher.create_matrix(key)
+    return jsonify({'matrix': matrix})
+
+@app.route('/api/playfair/encrypt', methods=['POST'])
+def playfair_encrypt():
+    data = request.get_json()
+    plaintext = data.get('plaintext')
+    key = data.get('key')
+    if plaintext is None or key is None:
+        return jsonify({'error': 'Missing plaintext or key'}), 400
+    matrix = playfair_cipher.create_matrix(key)
+    ciphertext = playfair_cipher.playfair_encrypt(plaintext, matrix)
+    return jsonify({'ciphertext': ciphertext})
+
+@app.route('/api/playfair/decrypt', methods=['POST'])
+def playfair_decrypt():
+    data = request.get_json()
+    ciphertext = data.get('ciphertext')
+    key = data.get('key')
+    if ciphertext is None or key is None:
+        return jsonify({'error': 'Missing ciphertext or key'}), 400
+    matrix = playfair_cipher.create_matrix(key)
+    plaintext = playfair_cipher.playfair_decrypt(ciphertext, matrix)
     return jsonify({'plaintext': plaintext})
 
 if __name__ == '__main__':

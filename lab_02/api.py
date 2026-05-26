@@ -3,12 +3,14 @@ from cipher.caesar import CaesarCipher
 from cipher.vigenere import VigenereCipher
 from cipher.railfence import RailfenceCipher
 from cipher.playfair import PlayfairCipher
+from cipher.transposition import TranspositionCipher
 
 app = Flask(__name__)
 cipher = CaesarCipher()
 vigenere_cipher = VigenereCipher()
 railfence_cipher = RailfenceCipher()
 playfair_cipher = PlayfairCipher()
+transposition_cipher = TranspositionCipher()
 
 @app.route('/api/caesar/encrypt', methods=['POST'])
 def encrypt():
@@ -100,6 +102,16 @@ def playfair_decrypt():
     matrix = playfair_cipher.create_matrix(key)
     plaintext = playfair_cipher.playfair_decrypt(ciphertext, matrix)
     return jsonify({'plaintext': plaintext})
+
+@app.route('/api/transposition/encrypt', methods=['POST'])
+def transposition_encrypt():
+    data = request.get_json()
+    plaintext = data.get('plaintext')
+    key = data.get('key')
+    if plaintext is None or key is None:
+        return jsonify({'error': 'Missing plaintext or key'}), 400
+    ciphertext = transposition_cipher.encrypt(plaintext, key)
+    return jsonify({'ciphertext': ciphertext})
 
 if __name__ == '__main__':
     app.run(host= '0.0.0.0', port=5000, debug=True)
